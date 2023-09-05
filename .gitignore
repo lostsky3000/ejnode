@@ -1,4 +1,7 @@
+.gitignore
 .idea/
 out/
 target/
 *.iml
+resource/
+resources/

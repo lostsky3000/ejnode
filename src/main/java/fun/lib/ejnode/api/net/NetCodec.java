@@ -18,4 +18,6 @@ public interface NetCodec {
     public static final int TYPE_RAW_SERVER = 6;
 
     public static final int TYPE_REDIS_CLIENT = 7;
+
+    public static final int TYPE_MYSQL_CLIENT = 8;
 }

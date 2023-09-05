@@ -156,6 +156,11 @@ public final class TcpClientWrap implements TcpClient, CbChannelHandlerInit {
             RawHandlerInit init = new RawHandlerInit(this, _netWrap, id, false);
             return init;
         }
+        else if(codecType == NetCodec.TYPE_MYSQL_CLIENT){
+            CodecMysqlClientWrap cfg = (CodecMysqlClientWrap) codec;
+            MysqlClientHandlerInit init = new MysqlClientHandlerInit(this, _netWrap, id);
+            return init;
+        }
         return null;
     }
 

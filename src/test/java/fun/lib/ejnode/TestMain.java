@@ -7,9 +7,11 @@ import fun.lib.ejnode.api.net.*;
 import fun.lib.ejnode.core.EJNode;
 import fun.lib.ejnode.core.LoopWorker;
 import fun.lib.ejnode.core.NodeContext;
+import fun.lib.ejnode.core.db.mysql.MysqlClient;
 import fun.lib.ejnode.core.db.redis.*;
 import fun.lib.ejnode.core.net.ClientCodec;
 import fun.lib.ejnode.core.net.ServerCodec;
+import fun.lib.ejnode.core.pool.Pool;
 import fun.lib.ejnode.util.timer.DFTimeout;
 import fun.lib.ejnode.util.timer_bak.DFHiWheelTimerBak;
 import fun.lib.ejnode.util.timer_bak.DFTimeoutBak;
@@ -72,7 +74,8 @@ public class TestMain {
 //        objPool.recycle(str1);
 
         EJNode node = EJNode.get();
-        node.entry(redisPoolTest1.class)
+//        node.entry(redisPoolTest1.class)
+        node.entry(mysqlPoolTest1.class)
                 .logLevel(Logger.LEVEL_DEBUG)
                 .start();
 
@@ -95,6 +98,28 @@ public class TestMain {
         //cacheLineTest();
     }
 
+    static class mysqlPoolTest1 extends NodeEntry{
+        @Override
+        public void onStart(NodeContext ctx, Object param) {
+            Db db = ctx.db;
+            Logger log = ctx.logger;
+            Timer timer = ctx.timer;
+            //
+            log.info("mysqlPoolTest1 onStart()");
+            String host = "127.0.0.1";
+            int port = 3306;
+            //
+//            Pool<MysqlClient> pool = db.mysql().createPool()
+//                    .connConfig(host, port, "")
+//                    .connTimeout(5000)
+//                    .poolSize(1)
+//                    .start();
+//            pool.book((error, client) -> {
+//
+//            });
+        }
+    }
+
     static class redisPoolTest1 extends NodeEntry{
         @Override
         public void onStart(NodeContext ctx, Object param) {
@@ -106,9 +131,9 @@ public class TestMain {
             String host = "8.210.10.221";
             int port = 11000;
             String pwd = "L38(3#j,27qWqE@";
-            final RedisPool pool = db.redis().createPool()
+            final Pool<RedisClient> pool = db.redis().createPool()
                     .connConfig(host, port, pwd)
-//                    .connTimeout(5000)
+                    .connTimeout(5000)
                     .poolSize(1)
                     .start();
                     pool.book((error, client) -> {
@@ -140,27 +165,27 @@ public class TestMain {
 //                            return;
 //                        }
 
-                        // subs test
-                        try {
-//                            client.unsubscribe();
-                            client
-//                                    .unsubscribe("ch111", "ch111")
-                                    .unsubscribe()
-                                    .onUnsubsResult((error1, channel, subsNum) -> {
-                                log.info("unsubscribe: error="+error1+", channel="+channel+", subsNum="+subsNum);
-                            });
-                            timer.timeout(6000, ()->{
-                                client.get("test1").onResult((error1, result) -> {
-
-                                });
-                                client.release();
-                            });
-                        }finally {
-
-                        }
-                        if(log != null){
-                            return;
-                        }
+//                        // subs test
+//                        try {
+////                            client.unsubscribe();
+//                            client
+////                                    .unsubscribe("ch111", "ch111")
+//                                    .unsubscribe()
+//                                    .onUnsubsResult((error1, channel, subsNum) -> {
+//                                log.info("unsubscribe: error="+error1+", channel="+channel+", subsNum="+subsNum);
+//                            });
+//                            timer.timeout(6000, ()->{
+//                                client.get("test1").onResult((error1, result) -> {
+//
+//                                });
+//                                client.release();
+//                            });
+//                        }finally {
+//
+//                        }
+//                        if(log != null){
+//                            return;
+//                        }
 
                         try {
                             client.ping().onResult((error1, result) -> {
@@ -345,6 +370,9 @@ public class TestMain {
                             });
                             list.rpoplpush("abccba123", "abccba123-list2").onResult((error1, result) -> {
                                 log.info("rpoplpush ret: "+error1+", "+result);
+                            });
+                            list.brpop("abccba123-", "listTest222", "5").onResult((error1, result) -> {
+                                log.info("brpop ret: "+error1+", "+result);
                             });
                             //
                             RedisApiSet set = client.apiSet();
@@ -551,6 +579,7 @@ public class TestMain {
                             client.select(0).onResult((error1, result) -> {
                                 log.info("select ret: "+error1+", "+result);
                             });
+
                             //
                             client.del("abccba123");
                             client.del("abccba321");
@@ -667,7 +696,7 @@ public class TestMain {
 
     static void redisDecodeTest1(){
 
-        RedisClientWrap c = new RedisClientWrap();
+//        RedisClientWrap c = new RedisClientWrap();
 //        CommandFuture<String> f = c.auth("asd");
 //        f.onResult((error, result) -> {
 //            int n = 1;

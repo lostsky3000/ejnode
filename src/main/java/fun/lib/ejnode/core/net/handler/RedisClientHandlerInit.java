@@ -17,6 +17,7 @@ public final class RedisClientHandlerInit extends ChannelInitializer<SocketChann
     private final long _callerId;
     private final EJNetWrap _netWrapCaller;
     private final CbChannelHandlerInit _cbHandlerInit;
+
     private final int _cacheMax;
 
     public RedisClientHandlerInit(CbChannelHandlerInit cbHandlerInit, EJNetWrap netWrapCaller, long callerId, int cacheMax){

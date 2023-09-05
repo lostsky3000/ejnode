@@ -1,5 +1,7 @@
 package fun.lib.ejnode.core.db.redis;
 
+import fun.lib.ejnode.core.pool.Pool;
+
 public interface RedisPoolBuilder {
 
     RedisPoolBuilder poolSize(int size);
@@ -10,6 +12,6 @@ public interface RedisPoolBuilder {
 
     RedisPoolBuilder keepAliveInterval(long intervalMs);
 
-    RedisPool start();
+    Pool<RedisClient> start();
 
 }

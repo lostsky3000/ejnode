@@ -67,9 +67,9 @@ public final class RedisCmd {
     //
     private static final int CMD_HASH_BASE = 39;
     private static final int CMD_LIST_BASE = 54;
-    private static final int CMD_SET_BASE = 69;
-    private static final int CMD_ZSET_BASE = 85;
-    private static final int CMD_SCRIPT_BASE = 114;
+    private static final int CMD_SET_BASE = 70;
+    private static final int CMD_ZSET_BASE = 86;
+    private static final int CMD_SCRIPT_BASE = 115;
     // hash
     public static final int HDEL = CMD_HASH_BASE + 1;
     public static final int HEXISTS = CMD_HASH_BASE + 2;
@@ -102,6 +102,7 @@ public final class RedisCmd {
     public static final int RPOPLPUSH = CMD_LIST_BASE + 13;
     public static final int RPUSH = CMD_LIST_BASE + 14;
     public static final int RPUSHX = CMD_LIST_BASE + 15;
+    public static final int BRPOP = CMD_LIST_BASE + 16;
     // set
     public static final int SADD = CMD_SET_BASE + 1;
     public static final int SCARD = CMD_SET_BASE + 2;
@@ -158,6 +159,24 @@ public final class RedisCmd {
             "$6\r\nSCRIPT\r\n",   // SCRIPT
             "$4\r\nEVAL\r\n",  // EVAL
             "$7\r\nEVALSHA\r\n",  // EVALSHA
+    };
+    protected static final String[] CMD_TEMPLATE_STR_LIST = {
+            "$6\r\nLINDEX\r\n",   // LINDEX
+            "$7\r\nLINSERT\r\n",   // LINSERT
+            "$4\r\nLLEN\r\n",   // LLEN
+            "$5\r\nLMOVE\r\n",   // LMOVE
+            "$4\r\nLPOP\r\n",   // LPOP
+            "$5\r\nLPUSH\r\n",   // LPUSH
+            "$6\r\nLPUSHX\r\n",   // LPUSHX
+            "$6\r\nLRANGE\r\n",   // LRANGE
+            "$4\r\nLREM\r\n",   // LREM
+            "$4\r\nLSET\r\n",   // LSET
+            "$5\r\nLTRIM\r\n",   // LTRIM
+            "$4\r\nRPOP\r\n",   // RPOP
+            "$9\r\nRPOPLPUSH\r\n",   // RPOPLPUSH
+            "$5\r\nRPUSH\r\n",   // RPUSH
+            "$6\r\nRPUSHX\r\n",   // RPUSHX
+            "$5\r\nBRPOP\r\n",   // BRPOP
     };
 
     protected static final String[] CMD_TEMPLATE_STR_COMMON = {
@@ -255,24 +274,6 @@ public final class RedisCmd {
             "$6\r\nSUNION\r\n",   // SUNION
             "$11\r\nSUNIONSTORE\r\n",   // SUNIONSTORE
 
-    };
-
-    protected static final String[] CMD_TEMPLATE_STR_LIST = {
-            "$6\r\nLINDEX\r\n",   // LINDEX
-            "$7\r\nLINSERT\r\n",   // LINSERT
-            "$4\r\nLLEN\r\n",   // LLEN
-            "$5\r\nLMOVE\r\n",   // LMOVE
-            "$4\r\nLPOP\r\n",   // LPOP
-            "$5\r\nLPUSH\r\n",   // LPUSH
-            "$6\r\nLPUSHX\r\n",   // LPUSHX
-            "$6\r\nLRANGE\r\n",   // LRANGE
-            "$4\r\nLREM\r\n",   // LREM
-            "$4\r\nLSET\r\n",   // LSET
-            "$5\r\nLTRIM\r\n",   // LTRIM
-            "$4\r\nRPOP\r\n",   // RPOP
-            "$9\r\nRPOPLPUSH\r\n",   // RPOPLPUSH
-            "$5\r\nRPUSH\r\n",   // RPUSH
-            "$6\r\nRPUSHX\r\n",   // RPUSHX
     };
 
     protected static final String[] CMD_TEMPLATE_STR_HASH = {

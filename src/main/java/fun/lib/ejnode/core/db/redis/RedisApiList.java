@@ -69,5 +69,9 @@ public final class RedisApiList {
         return _core._doSendCommand(_version, RedisCmd.RPUSHX, key, elements);
     }
 
+    public CommandFuture<List<Object>> brpop(String...params){
+        return _core._doSendCommand(_version, RedisCmd.BRPOP, null, params);
+    }
+
     // LMPOP, LPOS
 }

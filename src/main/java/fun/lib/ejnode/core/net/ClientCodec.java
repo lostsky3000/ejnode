@@ -1,10 +1,7 @@
 package fun.lib.ejnode.core.net;
 
 
-import fun.lib.ejnode.api.net.CodecHttpClient;
-import fun.lib.ejnode.api.net.CodecRawClient;
-import fun.lib.ejnode.api.net.CodecRedisClient;
-import fun.lib.ejnode.api.net.CodecWebsocketClient;
+import fun.lib.ejnode.api.net.*;
 
 public final class ClientCodec {
     public static CodecHttpClient http(){
@@ -24,6 +21,11 @@ public final class ClientCodec {
 
     public static CodecRedisClient redis(){
         CodecRedisClientWrap wrap = new CodecRedisClientWrap();
+        return wrap;
+    }
+
+    public static CodecMysqlClient mysql(){
+        CodecMysqlClientWrap wrap = new CodecMysqlClientWrap();
         return wrap;
     }
 }

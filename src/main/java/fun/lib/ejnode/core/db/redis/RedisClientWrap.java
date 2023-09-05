@@ -1,9 +1,10 @@
 package fun.lib.ejnode.core.db.redis;
 
 import fun.lib.ejnode.api.StatusIllegalException;
-import fun.lib.ejnode.api.Timer;
 import fun.lib.ejnode.api.callback.CbCommon;
 import fun.lib.ejnode.api.net.TcpChannel;
+import fun.lib.ejnode.core.pool.PoolClient;
+import fun.lib.ejnode.core.pool.ClientPoolCore;
 import fun.lib.ejnode.core.net.ClientCodec;
 import fun.lib.ejnode.util.container.DFPooledLinkedList;
 import io.netty.buffer.ByteBuf;
@@ -13,15 +14,11 @@ import io.netty.util.CharsetUtil;
 import java.util.HashMap;
 import java.util.List;
 
-public final class RedisClientWrap{
+public final class RedisClientWrap extends PoolClient {
 
-    private RedisPoolWrap _poolWrap = null;
+    private ClientPoolCore _pool = null;
 
     private long _keepAliveInterval = 1000;
-
-    protected final long id;
-    protected final String host;
-    protected final int port;
     protected final String pwd;
 
     private TcpChannel _channel;
@@ -30,27 +27,25 @@ public final class RedisClientWrap{
 
     private DFPooledLinkedList<RspCb> _lsRspCb;
     private HashMap<String, SubsCtx> _mapPubSubCtx;
-    private int _actSubsChannelNum;
     private ClientApi _api;
     private long _apiVerCnt;
 
-    public RedisClientWrap(){   // debug
-        id = 0;
-        _poolWrap = null;
-        host = null;
-        port = 0;
-        pwd = null;
-        _bytesBulkLen = new byte[32];
-        _bytesBulkLen[0] = '$';
-        _lsRspCb = new DFPooledLinkedList<>();
-    }
+//    public RedisClientWrap(){   // debug
+//        super(0);
+//        _pool = null;
+//        host = null;
+//        port = 0;
+//        pwd = null;
+//        _bytesBulkLen = new byte[32];
+//        _bytesBulkLen[0] = '$';
+//        _lsRspCb = new DFPooledLinkedList<>();
+//    }
 
-    protected RedisClientWrap(long id, RedisPoolWrap poolWrap, String host, int port, String pwd){
-        this.id = id;
-        _poolWrap = poolWrap;
-        _keepAliveInterval = poolWrap.keepAliveInterval;
-        this.host = host;
-        this.port = port;
+    protected RedisClientWrap(long id, ClientPoolCore pool, String pwd){
+//        this.id = id;
+        super(id);
+        _pool = pool;
+        _keepAliveInterval = _pool.keepAliveInterval();
         this.pwd = pwd;
         _bytesBulkLen = new byte[32];
         _bytesBulkLen[0] = '$';
@@ -59,30 +54,30 @@ public final class RedisClientWrap{
         _apiVerCnt = 0;
         _connCalled = false;
         _mapPubSubCtx = new HashMap<>();
-        _actSubsChannelNum = 0;
     }
 
-    protected void connect(long timeout){
+    @Override
+    public void connect(long timeout){
         if(_connCalled){
             return;
         }
         _connCalled = true;
-        _poolWrap.net.createClient(host, port)
+        _pool.net().createClient(_pool.getHost(), _pool.getPort())
                 .codec(ClientCodec.redis())
                 .timeout(timeout)
                 .connect((error, channel) -> {
                     if(error != null){   // conn error
-                        _poolWrap.onClientConnDone(this, error);
+                        _pool.onClientConnDone(this, error);
                         return;
                     }
                     try {
                         channel.onRead(data -> {
                             _procReadData(data);
                         }).onError(error1 -> {
-                            _poolWrap.onClientDecodeError(this, error1);
+//                            _poolWrap.onClientDecodeError(this, error1);
                         }).onClose(()->{
                             _channel = null;
-                            _poolWrap.onClientDisconn(this);
+                            _pool.onClientDisconn(this);
 //                            System.out.println("redis client closed by server");
                         });
                     } catch (StatusIllegalException e) {
@@ -93,16 +88,17 @@ public final class RedisClientWrap{
                     rsp.onResult((error1, result) -> {
                         if(error1 == null && result.equals("OK")){
                             _updateApi();
-                            _poolWrap.onClientConnDone(this, null);
+                            _pool.onClientConnDone(this, null);
                         }else{
-                            _poolWrap.onClientConnDone(this, error1!=null?error1:"auth failed: "+result);
+                            _pool.onClientConnDone(this, error1!=null?error1:"auth failed: "+result);
                             channel.close();
                         }
                     });
                     _channel.flushBuffer();
                 });
     }
-    protected void close(){
+    @Override
+    public void close(){
         if(_channel != null){
             _channel.close();
             _channel = null;
@@ -122,7 +118,7 @@ public final class RedisClientWrap{
             return;
         }
         _onKeepAliveCheck = true;
-        _poolWrap.timer.timeout(delay, _cbKeepAlive);
+        _pool.timer().timeout(delay, _cbKeepAlive);
     }
     private final CbCommon _cbKeepAlive = () -> {
         _onKeepAliveCheck = false;
@@ -363,7 +359,7 @@ public final class RedisClientWrap{
         rsp.done = true;
         rsp.succ = false;
         rsp.error = error;
-        _poolWrap.timer.nextTick(()->{
+        _pool.timer().nextTick(()->{
             int pubSubFlag = rsp.pubSubFlag;
             if(pubSubFlag > 0){   // pubSubRelative
                 if(pubSubFlag == 1){   // subscribe
@@ -375,9 +371,10 @@ public final class RedisClientWrap{
                             e.printStackTrace();
                         }
                     }
-                }else if(pubSubFlag == 2){  // unsubscribe
-
                 }
+//                else if(pubSubFlag == 2){  // unsubscribe
+//
+//                }
             }else {
                 CommandResult cb = rsp.cbRsp;
                 if(cb != null){
@@ -400,10 +397,11 @@ public final class RedisClientWrap{
         }
         _updateApi();
         //
-        _poolWrap.onClientRelease(this);
+        _pool.onClientRelease(this);
     }
 
-    protected boolean isAlive(){
+    @Override
+    public boolean isAlive(){
         return _channel != null;
     }
 
