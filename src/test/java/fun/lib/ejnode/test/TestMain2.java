@@ -1,4 +1,4 @@
-package fun.lib.ejnode;
+package fun.lib.ejnode.test;
 
 import fun.lib.ejnode.api.*;
 import fun.lib.ejnode.core.EJNode;

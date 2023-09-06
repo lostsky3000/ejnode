@@ -5,3 +5,4 @@ target/
 *.iml
 resource/
 resources/
+src/test/java/fun/lib/ejnode/test/

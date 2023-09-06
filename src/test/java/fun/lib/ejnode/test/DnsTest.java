@@ -1,4 +1,4 @@
-package fun.lib.ejnode;
+package fun.lib.ejnode.test;
 
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBufUtil;
