@@ -2,7 +2,6 @@ package fun.lib.ejnode.core;
 
 import fun.lib.ejnode.api.NodeEntry;
 
-import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -21,9 +20,11 @@ public final class EJWorkerMgr implements EJNodeLife{
     private HashMap<Long, WorkerWrap> _mapWorker;
     private long _workerPidCnt;
     private final ConcurrentLinkedQueue<Long> _queForkPid = new ConcurrentLinkedQueue<>();
+    private final ForkParams _forkParamsFirst;
 
-    protected EJWorkerMgr(Class<? extends NodeEntry> clzEntryFirst){
+    protected EJWorkerMgr(Class<? extends NodeEntry> clzEntryFirst, ForkParams forkParamsFirst){
         _clzEntryFirst = clzEntryFirst;
+        _forkParamsFirst = forkParamsFirst;
         _ejNode = EJNode.get();
         _thPoolWorker = Executors.newCachedThreadPool(r -> {
             Long pid = _queForkPid.poll();
@@ -44,10 +45,10 @@ public final class EJWorkerMgr implements EJNodeLife{
         }finally {
             _writeLock.unlock();
         }
-        fork(_clzEntryFirst, null);
+        fork(_clzEntryFirst, _forkParamsFirst);
     }
 
-    protected long fork(Class<? extends NodeEntry> clzEntry, Object userData){
+    protected long fork(Class<? extends NodeEntry> clzEntry, ForkParams forkParams){
         long pid = 0;
         _writeLock.lock();
         try {
@@ -55,7 +56,10 @@ public final class EJWorkerMgr implements EJNodeLife{
                 return 0;
             }
             pid = _newWorkerPid();
-            LoopWorker worker = new LoopWorker(clzEntry, userData, pid);
+            if(forkParams == null){   // ensure forkParams is not null
+                forkParams = new ForkParamsBuilder().build();
+            }
+            LoopWorker worker = new LoopWorker(clzEntry, forkParams, pid);
             WorkerWrap wrap = new WorkerWrap(worker);
             _mapWorker.put(pid, wrap);
             // start worker loop

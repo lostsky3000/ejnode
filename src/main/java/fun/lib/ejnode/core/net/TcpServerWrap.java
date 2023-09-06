@@ -123,11 +123,11 @@ public final class TcpServerWrap implements TcpServer, TcpServerFuture, TcpServe
             if(_codec == null){
                 _codec = ServerCodec.bytes();
             }
-            EventLoopGroup grpBoss = _netWrap.getIoMgr().ioGroupBoss();
-            EventLoopGroup grpWorkerOutter = _netWrap.getIoMgr().ioGroupWorkerOutter();
+            EventLoopGroup grpBoss = _netWrap.ensureIoBossGroup();  // _netWrap.getIoMgr().ioGroupBoss();
+            EventLoopGroup grpServer = _netWrap.ensureIoServerGroup(); // _netWrap.getIoMgr().ioGroupWorkerOutter();
             //
             ServerBootstrap b = new ServerBootstrap();
-            b.group(grpBoss, grpWorkerOutter)
+            b.group(grpBoss, grpServer)
                     .channel((grpBoss instanceof EpollEventLoopGroup)?EpollServerSocketChannel.class:NioServerSocketChannel.class)
                     .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                     .option(ChannelOption.SO_BACKLOG, _soCfg.backLog)
@@ -141,11 +141,6 @@ public final class TcpServerWrap implements TcpServer, TcpServerFuture, TcpServe
                     .childOption(ChannelOption.SO_SNDBUF, _soCfg.sendBuff)
                     .childOption(ChannelOption.SO_RCVBUF, _soCfg.recvBuff)
                     .childHandler(_createChannelInit(_codec));
-//            if(_codec.codecType() == NetCodec.TYPE_WEBSOCKET_SERVER){
-//                b.childOption(ChannelOption.AUTO_READ, true);
-//            }else{
-//                b.childOption(ChannelOption.AUTO_READ, false);
-//            }
             try{
                 final ChannelFuture f = b.bind(host,port);
                 f.addListener(new GenericFutureListener<Future<? super Void>>() {

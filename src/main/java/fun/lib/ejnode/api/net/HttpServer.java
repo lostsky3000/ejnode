@@ -11,7 +11,8 @@ public final class HttpServer extends CommonTcpServer{
 
     private CbHttpServerReq _cbReq;
     private boolean _listenCalled;
-    private ChannelWorkerChooser _workerChooser;
+
+//    private ChannelWorkerChooser _workerChooser;
 
     public HttpServer(CbHttpServerReq cbReq, Net net){
         super(net);
@@ -19,12 +20,12 @@ public final class HttpServer extends CommonTcpServer{
         _listenCalled = false;
     }
 
-    public HttpServer workerChooser(ChannelWorkerChooser workerChooser){
-        if(_workerChooser == null){
-            _workerChooser = workerChooser;
-        }
-        return this;
-    }
+//    public HttpServer workerChooser(ChannelWorkerChooser workerChooser){
+//        if(_workerChooser == null){
+//            _workerChooser = workerChooser;
+//        }
+//        return this;
+//    }
 
     public void listen(int port){
         listen(port, null);
@@ -46,22 +47,22 @@ public final class HttpServer extends CommonTcpServer{
                     }
                     if(_cbReq != null){
                         boolean useCurWorker = true;
-                        if(_workerChooser != null){
-                            NodeContext ctx = NodeContext.currentContext();
-                            long dstWorker = _workerChooser.next(channel);
-                            if(dstWorker > 0 && dstWorker != ctx.process.pid()){   // send to another worker
-                                try {
-                                    final CbHttpServerReq cbReq = _cbReq;
-                                    useCurWorker = !channel.sender()
-                                            .onRead(((data, channel1) -> {
-                                                _procReqCb(data, channel1, NodeContext.currentContext().net, cbReq);
-                                            })).send(dstWorker);
-                                } catch (StatusIllegalException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                        if(useCurWorker){
+//                        if(_workerChooser != null){
+//                            NodeContext ctx = NodeContext.currentContext();
+//                            long dstWorker = _workerChooser.next(channel);
+//                            if(dstWorker > 0 && dstWorker != ctx.process.pid()){   // send to another worker
+//                                try {
+//                                    final CbHttpServerReq cbReq = _cbReq;
+//                                    useCurWorker = !channel.sender()
+//                                            .onRead(((data, channel1) -> {
+//                                                _procReqCb(data, channel1, NodeContext.currentContext().net, cbReq);
+//                                            })).send(dstWorker);
+//                                } catch (StatusIllegalException e) {
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//                        }
+//                        if(useCurWorker){
                             try {
                                 channel.onRead(data -> {
                                     _procReqCb(data, channel, net, _cbReq);
@@ -69,7 +70,7 @@ public final class HttpServer extends CommonTcpServer{
                             } catch (StatusIllegalException e) {
                                 e.printStackTrace();
                             }
-                        }
+//                        }
                     }else{
                         channel.close();
                     }

@@ -36,6 +36,8 @@ public final class EJEntryWrap{
 
         netWrap.setNodeCtx(nodeCtxWrap);
         netWrap.setTimerWrap(timerWrap);
+        netWrap.setIoGrpServerThreadNum(_worker.forkParams.ioServerGroupThreadNum());
+        netWrap.setIoGrpClientThreadNum(_worker.forkParams.ioClientGroupThreadNum());
     }
 
     protected void callExit(){

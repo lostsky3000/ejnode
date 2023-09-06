@@ -1,6 +1,7 @@
 package fun.lib.ejnode.api;
 
-import fun.lib.ejnode.api.net.TcpChannel;
+import fun.lib.ejnode.core.ForkParamsBuilder;
+import fun.lib.ejnode.core.ForkParams;
 
 public abstract class Process {
 
@@ -24,10 +25,10 @@ public abstract class Process {
     /**
      *
      * @param clzEntry
-     * @param param
+     * @param params
      * @return
      */
-    public abstract long fork(Class<? extends NodeEntry> clzEntry, Object param);
+    public abstract long fork(Class<? extends NodeEntry> clzEntry, ForkParams params);
 
     /**
      *
@@ -54,5 +55,8 @@ public abstract class Process {
      * @return
      */
     public abstract boolean send(long pid, Object msg);
+
+
+    public abstract ForkParamsBuilder forkParamsBuilder();
 
 }

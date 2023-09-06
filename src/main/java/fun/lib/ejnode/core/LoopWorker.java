@@ -53,9 +53,12 @@ public final class LoopWorker implements Runnable {
     private final ReentrantReadWriteLock.WriteLock _resWriteLock = _resLock.writeLock();
     private boolean _resReleased;
 
-    protected LoopWorker(Class<? extends NodeEntry> clzEntry, Object userData, long pid){
+    protected final ForkParams forkParams;
+
+    protected LoopWorker(Class<? extends NodeEntry> clzEntry, ForkParams forkParams, long pid){
         _clzEntry = clzEntry;
-        _userData = userData;
+        this.forkParams = forkParams;
+        _userData = forkParams.userData();
         this.pid = pid;
         _condAwake = _lockAwake.newCondition();
 

@@ -10,7 +10,7 @@ import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
 public final class WebsocketServer extends CommonTcpServer{
     private CbWsConnIn _cbConnIn;
     private boolean _listenCalled;
-    private ChannelWorkerChooser _workerChooser;
+//    private ChannelWorkerChooser _workerChooser;
 
     public WebsocketServer(Net net){
         super(net);
@@ -20,10 +20,11 @@ public final class WebsocketServer extends CommonTcpServer{
         _cbConnIn = cb;
         return this;
     }
-    public WebsocketServer workerChooser(ChannelWorkerChooser workerChooser){
-        _workerChooser = workerChooser;
-        return this;
-    }
+
+//    public WebsocketServer workerChooser(ChannelWorkerChooser workerChooser){
+//        _workerChooser = workerChooser;
+//        return this;
+//    }
 
     public void listen(int port, String wsUri){
         listen(port, wsUri, null);
@@ -44,27 +45,27 @@ public final class WebsocketServer extends CommonTcpServer{
                         return;
                     }
                     if(_cbConnIn != null){
-                        boolean useCurWorker = true;
-                        if(_workerChooser != null){
-                            long dstWorker = _workerChooser.next(channel);
-                            if(dstWorker > 0 && dstWorker != NodeContext.currentContext().process.pid()){
-                                try {
-                                    final CbWsConnIn cbConnIn = _cbConnIn;
-                                    useCurWorker = !channel.sender()
-                                            .onConnIn(channel1 -> {
-                                                WsSocketWrap sock = new WsSocketWrap(channel1, cbConnIn);
-                                                sock.startInnerRead();
-                                            })
-                                            .send(dstWorker);
-                                } catch (StatusIllegalException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                        }
-                        if(useCurWorker){
+//                        boolean useCurWorker = true;
+//                        if(_workerChooser != null){
+//                            long dstWorker = _workerChooser.next(channel);
+//                            if(dstWorker > 0 && dstWorker != NodeContext.currentContext().process.pid()){
+//                                try {
+//                                    final CbWsConnIn cbConnIn = _cbConnIn;
+//                                    useCurWorker = !channel.sender()
+//                                            .onConnIn(channel1 -> {
+//                                                WsSocketWrap sock = new WsSocketWrap(channel1, cbConnIn);
+//                                                sock.startInnerRead();
+//                                            })
+//                                            .send(dstWorker);
+//                                } catch (StatusIllegalException e) {
+//                                    e.printStackTrace();
+//                                }
+//                            }
+//                        }
+//                        if(useCurWorker){
                             WsSocketWrap sock = new WsSocketWrap(channel, _cbConnIn);
                             sock.startInnerRead();
-                        }
+//                        }
                     }else{
                         channel.close();
                     }

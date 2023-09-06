@@ -2,9 +2,6 @@ package fun.lib.ejnode.core;
 
 import fun.lib.ejnode.api.NodeEntry;
 import fun.lib.ejnode.api.Process;
-import fun.lib.ejnode.api.StatusIllegalException;
-import fun.lib.ejnode.api.net.TcpChannel;
-import fun.lib.ejnode.core.net.TcpChannelWrap;
 
 public final class EJProcessWrap extends Process {
 
@@ -36,11 +33,11 @@ public final class EJProcessWrap extends Process {
     }
 
     @Override
-    public long fork(Class<? extends NodeEntry> clzEntry, Object param) {
+    public long fork(Class<? extends NodeEntry> clzEntry, ForkParams params) {
         if(_entryWrap.exitCalled()){
             return 0;
         }
-        return _workerMgr.fork(clzEntry, param);
+        return _workerMgr.fork(clzEntry, params);
     }
 
     @Override
@@ -80,6 +77,11 @@ public final class EJProcessWrap extends Process {
             return true;
         }
         return false;
+    }
+
+    @Override
+    public ForkParamsBuilder forkParamsBuilder() {
+        return new ForkParamsBuilder();
     }
 
     protected void onExit(){

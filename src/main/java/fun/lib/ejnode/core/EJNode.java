@@ -5,7 +5,6 @@ import fun.lib.ejnode.api.NodeEntry;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -52,9 +51,7 @@ public final class EJNode{
         return _logger;
     }
 
-    private volatile int _ioGrpBossNum = 1;
-    private volatile int _ioGrpWorkerOutterNum = 1;
-    private volatile int _ioGrpWorkerInnerNum = 1;
+    //
     private final AtomicBoolean _hasStarted = new AtomicBoolean(false);
     public void start(){
         do{
@@ -62,7 +59,6 @@ public final class EJNode{
                 break;
             }
             _initParams();
-            _initIoGroups();
             _initLogger();
             _initTimer();
             _initWorkerMgr();
@@ -89,17 +85,6 @@ public final class EJNode{
         }while (false);
     }
 
-    private EJIoMgr _ioMgr;
-    private void _initIoGroups(){
-        if(_ioMgr == null){
-            _ioMgr = new EJIoMgr();
-            _ioMgr.start(_ioGrpBossNum, _ioGrpWorkerOutterNum, _ioGrpWorkerInnerNum);
-        }
-    }
-    protected EJIoMgr getIoMgr(){
-        return _ioMgr;
-    }
-
     private EJTimerCore _timer;
     private void _initTimer(){
         _timer = new EJTimerCore(EJConst.TIMER_TICK_MS, EJConst.TIMER_WHEEL_SIZE, EJConst.TIMER_WAIT_MS);
@@ -113,7 +98,7 @@ public final class EJNode{
 
     private EJWorkerMgr _workerMgr;
     private void _initWorkerMgr(){
-        _workerMgr = new EJWorkerMgr(_clzEntry);
+        _workerMgr = new EJWorkerMgr(_clzEntry, _forkParams);
     }
     private void _startWorkerMgr(){
         _workerMgr.start();
@@ -122,17 +107,10 @@ public final class EJNode{
         return _workerMgr;
     }
 
-
     private void _initParams(){
-        _ioGrpBossNum = Math.max(_ioGrpBossNum, 1);
-        _ioGrpWorkerOutterNum = Math.max(_ioGrpWorkerOutterNum, 1);
-        _ioGrpWorkerInnerNum = Math.max(_ioGrpWorkerInnerNum, 1);
+
     }
     private void _initDefaultParams(){
-        int cpuCoreNum = EJEnvWrap.getCpuCoreNum();
-        _ioGrpBossNum = 1;
-        _ioGrpWorkerOutterNum = Math.min(cpuCoreNum * 2, EJConst.IO_WORKER_THREAD_MAX);
-        _ioGrpWorkerInnerNum = 1;
         //
         _logLevel = Logger.LEVEL_INFO;
     }
@@ -156,7 +134,6 @@ public final class EJNode{
         if(leftNum == 0){   // all loop worker exited, shutdown other loops
             int workerNum = _workerMgr.workerNum();  // check accurately by lock
             if(workerNum == 0){
-                _ioMgr.shutdown();
                 _timer.shutdown();
                 _logger.shutdown();
             }
@@ -177,12 +154,21 @@ public final class EJNode{
         if(leftNum == 0) {   // all loop worker exited, release resource
             _timer.onNodeExit();
             _workerMgr.onNodeExit();
-            _ioMgr.onNodeExit();
         }
     }
 
     protected static final int LOOP_TYPE_TIMER = 1;
     protected static final int LOOP_TYPE_LOGGER = 2;
+
+    //
+    private ForkParams _forkParams;
+    public EJNode forkParams(ForkParams forkParams){
+        _forkParams = forkParams;
+        return this;
+    }
+    public ForkParamsBuilder forkParamsBuilder(){
+        return new ForkParamsBuilder();
+    }
 }
 
 

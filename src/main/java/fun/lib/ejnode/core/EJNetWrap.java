@@ -7,6 +7,9 @@ import fun.lib.ejnode.api.net.*;
 import fun.lib.ejnode.core.net.*;
 import fun.lib.ejnode.util.container.DFIdxVerList;
 import io.netty.channel.Channel;
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.epoll.EpollEventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.ReferenceCountUtil;
 
 import java.util.HashMap;
@@ -16,7 +19,7 @@ public final class EJNetWrap extends Net {
 
     private LoopWorker _worker;
     private EJEntryWrap _entryWrap;
-    private EJIoMgr _ioMgr;
+//    private EJIoMgr _ioMgr;
     private EJLoggerCore _logger;
     private EJWorkerMgr _workerMgr;
 
@@ -40,7 +43,7 @@ public final class EJNetWrap extends Net {
         _entryWrap = entryWrap;
 
         EJNode ejNode = EJNode.get();
-        _ioMgr = ejNode.getIoMgr();
+//        _ioMgr = ejNode.getIoMgr();
         _logger = ejNode.getLogger();
         _workerMgr = ejNode.getWorkerMgr();
         _tcpServerIdCnt = 0;
@@ -270,7 +273,7 @@ public final class EJNetWrap extends Net {
     }
 
     protected void onExit(){
-        _ioMgr = null;
+//        _ioMgr = null;
         // close all server channel
         TcpServerWrap[] arr = _mapTcpServer.values().toArray(new TcpServerWrap[0]);
         for(int i=0; i<arr.length; ++i){
@@ -286,6 +289,8 @@ public final class EJNetWrap extends Net {
             arrChannel[i].release();
         }
         _mapTempChannel.clear();
+        // shutdown ioGroup
+        _shutdownAllIoGroup();
     }
 
     public boolean sendChannel(ChannelSenderWrap senderWrap) throws StatusIllegalException {
@@ -434,14 +439,75 @@ public final class EJNetWrap extends Net {
     public Timer getTimer(){
         return _timerWrap;
     }
-    public EJIoMgr getIoMgr(){
-        return _ioMgr;
-    }
+//    public EJIoMgr getIoMgr(){
+//        return _ioMgr;
+//    }
     public EJLoggerCore getLogger(){
         return _logger;
     }
 
     public NodeContext nodeCtx(){
         return _nodeCtx;
+    }
+
+
+    //
+    private EventLoopGroup _ioGrpBoss = null;
+    public EventLoopGroup ensureIoBossGroup(){
+        if(_ioGrpBoss == null){
+            if(EJEnvWrap.isLinux()){
+                _ioGrpBoss = new EpollEventLoopGroup(EJConst.IO_BOSS_GROUP_THREAD_NUM);
+            }else{
+                _ioGrpBoss = new NioEventLoopGroup(EJConst.IO_BOSS_GROUP_THREAD_NUM);
+            }
+        }
+        return _ioGrpBoss;
+    }
+    private int _ioGrpThNumServer = 1;
+    private EventLoopGroup _ioGrpServer = null;
+    protected void setIoGrpServerThreadNum(int threadNum){
+        _ioGrpThNumServer = threadNum;
+    }
+    public EventLoopGroup ensureIoServerGroup(){
+        if(_ioGrpServer == null){
+            if(EJEnvWrap.isLinux()){
+                _ioGrpServer = new EpollEventLoopGroup(_ioGrpThNumServer);
+            }else{
+                _ioGrpServer = new NioEventLoopGroup(_ioGrpThNumServer);
+            }
+        }
+        return _ioGrpServer;
+    }
+    private int _ioGrpThNumClient = 1;
+    private EventLoopGroup _ioGrpClient = null;
+    protected void setIoGrpClientThreadNum(int threadNum){
+        _ioGrpThNumClient = threadNum;
+    }
+    public EventLoopGroup ensureIoClientGroup(){
+        if(_ioGrpThNumClient < 1){   // use serverGroup
+            return ensureIoServerGroup();
+        }
+        if(_ioGrpClient == null){
+            if(EJEnvWrap.isLinux()){
+                _ioGrpClient = new EpollEventLoopGroup(_ioGrpThNumClient);
+            }else{
+                _ioGrpClient = new NioEventLoopGroup(_ioGrpThNumClient);
+            }
+        }
+        return _ioGrpClient;
+    }
+    private void _shutdownAllIoGroup(){
+        if(_ioGrpBoss != null){
+            _ioGrpBoss.shutdownGracefully();
+            _ioGrpBoss = null;
+        }
+        if(_ioGrpServer != null){
+            _ioGrpServer.shutdownGracefully();
+            _ioGrpServer = null;
+        }
+        if(_ioGrpClient != null){
+            _ioGrpClient.shutdownGracefully();
+            _ioGrpClient = null;
+        }
     }
 }

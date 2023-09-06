@@ -99,7 +99,7 @@ public final class TcpClientWrap implements TcpClient, CbChannelHandlerInit {
             if(_codec == null){  // no codec, use default
                 _codec = ClientCodec.bytes();
             }
-            EventLoopGroup group = _netWrap.getIoMgr().ioGroupWorkerInner();
+            EventLoopGroup group = _netWrap.ensureIoClientGroup(); // _netWrap.getIoMgr().ioGroupWorkerInner();
             Bootstrap boot = new Bootstrap();
             boot.group(group)
                     .channel((group instanceof EpollEventLoopGroup)? EpollSocketChannel.class: NioSocketChannel.class)

@@ -75,8 +75,9 @@ public class TestMain {
 
         EJNode node = EJNode.get();
 //        node.entry(redisPoolTest1.class)
-        node.entry(mysqlPoolTest1.class)
+        node.entry(HttpServerTest1.class)
                 .logLevel(Logger.LEVEL_DEBUG)
+//                .forkParams(node.forkParamsBuilder().ioServerGroupThreadNum(4).build())
                 .start();
 
 //        redisDecodeTest1();
@@ -659,7 +660,6 @@ public class TestMain {
                         } catch (StatusIllegalException e) {
                             e.printStackTrace();
                         }
-                        // L38(3#j,27qWqE@
                         ByteBuf bufSend = sendCmdBuf("auth", "L38(3#j,27qWqE@");
                         channel.write(bufSend);
                         bufSend = sendCmdBuf("auth", "L38(3#j,27qWqE@");
@@ -1031,8 +1031,8 @@ public class TestMain {
                         try {
                             channel.onRead(data -> {
                                 HttpResponseRecv rsp = (HttpResponseRecv) data;
-                                NodeContext ctx1 = NodeContext.currentContext();
-                                ctx1.logger.info("recvRsp: status=" + rsp.status()+", contentStr="+rsp.contentAsString());
+//                                NodeContext ctx1 = NodeContext.currentContext();
+                                ctx.logger.info("recvRsp: status=" + rsp.status()+", contentStr="+rsp.contentAsString());
                                 channel.close();
                             });
                         } catch (StatusIllegalException e) {
@@ -1059,22 +1059,21 @@ public class TestMain {
             Logger log = ctx.logger;
             Net net = ctx.net;
             Timer timer = ctx.timer;
-
             //
-            int workerNum = 4;
-            List<Long> lsWorker = new ArrayList<>();
-            for(int i=0; i<workerNum; ++i){
-                long pid = ctx.process.fork(SendChannelTest2.class);
-                lsWorker.add(pid);
-            }
+//            int workerNum = 4;
+//            List<Long> lsWorker = new ArrayList<>();
+//            for(int i=0; i<workerNum; ++i){
+//                long pid = ctx.process.fork(SendChannelTest2.class);
+//                lsWorker.add(pid);
+//            }
             //
             WebsocketServer server = net.websocket().createServer();
             server.onConnection(socket -> {
-                NodeContext ctx1 = NodeContext.currentContext();
-                ctx1.logger.info("connIn, " + ctx1.process.name);
+//                NodeContext ctx1 = NodeContext.currentContext();
+//                ctx1.logger.info("connIn, " + ctx1.process.name);
                 try {
                     socket.onMessage(msg -> {
-                        ctx1.logger.info("recvMsg: "+msg.text()+", "+ctx1.process.name);
+                        ctx.logger.info("recvMsg: "+msg.text()+", "+ctx.process.name);
                         socket.send("echo from server, "+ msg.text());
 //                        socket.sendThenClose("echo from server, bye");
                     });
@@ -1083,7 +1082,7 @@ public class TestMain {
                 }
                 try {
                     socket.onClose(()->{
-                        ctx1.logger.info("connGone, " + ctx1.process.name);
+                        ctx.logger.info("connGone, " + ctx.process.name);
                     });
                 } catch (StatusIllegalException e) {
                     e.printStackTrace();
@@ -1131,7 +1130,6 @@ public class TestMain {
         }
     }
 
-
     static class HttpServerTest1 extends NodeEntry{
         @Override
         public void onStart(NodeContext ctx, Object param) {
@@ -1140,29 +1138,31 @@ public class TestMain {
             Timer timer = ctx.timer;
             //
             log.info("HttpServerTest1 onStart()");
-            int workerNum = 4;
-            List<Long> lsWorker = new ArrayList<>();
-            for(int i=0; i<workerNum; ++i){
-                long pid = ctx.process.fork(SendChannelTest2.class);
-                lsWorker.add(pid);
-            }
-            lsWorker.add(ctx.process.pid());
+            //
+//            int workerNum = 4;
+//            List<Long> lsWorker = new ArrayList<>();
+//            for(int i=0; i<workerNum; ++i){
+//                long pid = ctx.process.fork(SendChannelTest2.class);
+//                lsWorker.add(pid);
+//            }
+//            lsWorker.add(ctx.process.pid());
             //
             HttpServer server = net.http().createServer((req, rsp) -> {
-                NodeContext ctx2 = NodeContext.currentContext();
-                Logger log2 = ctx2.logger;
+//                NodeContext ctx2 = NodeContext.currentContext();
+//                Logger log2 = ctx2.logger;
 
                 boolean keepAlive = req.headers().containsValue("Connection", "Keep-Alive", true);
                 Map<String,String> mapParam = req.params();
-                log2.info("recvReq, uri=" + req.uri()+", method="+req.method()+", keepAlive="+keepAlive+", " + ctx2.process.name+", content="+req.contentAsString());
+                log.info("recvReq, uri=" + req.uri()+", method="+req.method()+", keepAlive="+keepAlive+", " + ctx.process.name+", content="+req.contentAsString());
                 rsp.setStatus(200);
                 rsp.addHeader("key1", "val1");
                 rsp.echo("hehe1<br/>");
 //                timer.timeout(1000, ()->{
                     rsp.end("hehe2");
 //                });
+
             })
-                    .workerChooser(new DefaultWorkerChooser(lsWorker))
+//                    .workerChooser(new DefaultWorkerChooser(lsWorker))
                     ;
             server.listen(10086, error -> {
                 if(error != null){
@@ -1380,7 +1380,7 @@ public class TestMain {
 
 
             for(int i=0; i<1; ++i){
-                s_forkPid = ctx.process.fork(TestEntry2.class, i);
+                s_forkPid = ctx.process.fork(TestEntry2.class, ctx.process.forkParamsBuilder().userData(i).build());
             }
 
         }
