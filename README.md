@@ -22,7 +22,9 @@ ejnode是一个业务逻辑单线程，非业务功能(io,timer等)多线程的�
 
 - 经过优化的定时器，支持海量定时任务
 
-- 提供 http,websocket,redis 等常用网络服务及异步驱动
+- 提供 http,websocket 等常用网络服务
+
+- 提供 redis异步驱动(RESP2协议)
 
 
 
