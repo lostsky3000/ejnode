@@ -2,16 +2,17 @@ package fun.lib.ejnode.example;
 
 import fun.lib.ejnode.api.Logger;
 import fun.lib.ejnode.api.NodeEntry;
+import fun.lib.ejnode.api.Process;
 import fun.lib.ejnode.api.Timer;
 import fun.lib.ejnode.core.EJNode;
 import fun.lib.ejnode.core.NodeContext;
 
 /**
- * 定时任务 示例
+ * 关闭ejnode 示例
  * @author lostsky
  */
 
-public class Schedule {
+public class Exit {
 
     public static void main(String[] args){
         EJNode.get()
@@ -20,18 +21,16 @@ public class Schedule {
     }
 
     static class Entry extends NodeEntry{
-        private int scheduleCount = 0;
         @Override
         public void onStart(NodeContext ctx, Object param) {
             Logger log = ctx.logger;
+            Process process = ctx.process;
             Timer timer = ctx.timer;
 
-            //开启定时任务，每1000ms执行一次
-            timer.schedule(1000, task -> {
-                log.info("onSchedule, scheduleCount="+scheduleCount);
-                if(++scheduleCount > 10){
-                    task.cancel();   //结束当前定时任务
-                }
+            log.info("onStart, will exit after 3 seconds");
+            timer.timeout(3000, ()->{
+                log.info("exit now");
+                process.exit();   // 退出当前process(线程)，所有业务线程退出后，ejnode将释放所有资源并退出
             });
         }
     }

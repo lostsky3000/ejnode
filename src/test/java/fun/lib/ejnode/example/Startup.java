@@ -5,12 +5,17 @@ import fun.lib.ejnode.api.NodeEntry;
 import fun.lib.ejnode.core.EJNode;
 import fun.lib.ejnode.core.NodeContext;
 
+/**
+ * 启动ejnode 示例
+ * @author lostsky
+ */
+
 public class Startup {
 
     public static void main(String[] args){
-        EJNode node = EJNode.get();
-        node.entry(Entry.class)
-                .start();
+        EJNode.get()
+                .entry(Entry.class)  // 设置启动入口类
+                .start();  // 开始事件循环
     }
 
     static class Entry extends NodeEntry{

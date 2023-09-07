@@ -4,7 +4,7 @@
 
 一句话概括: 
 
-ejnode是一个业务逻辑单线程，非业务功能(io,timer等)多线程的异步消息处理框架，正如nodejs做的那样。
+ejnode是一个业务逻辑单线程，非业务功能(io,timer等)多线程的异步事件处理框架，正如nodejs做的那样。
 
 将业务逻辑回归简洁，让开发者摆脱多线程编程的心智负担，但又可以在io等方面享受多线程带来的性能优势。
 
@@ -41,6 +41,8 @@ ejnode是一个业务逻辑单线程，非业务功能(io,timer等)多线程的�
 [WebsocketServer](src/test/java/fun/lib/ejnode/example/WebsocketServerTest.java) websocket服务器示例
 
 [RedisClient](src/test/java/fun/lib/ejnode/example/RedisClientTest.java) redis客户端示例
+
+[Logger](src/test/java/fun/lib/ejnode/example/LoggerTest.java) 日志示例
 
 
 ## 社区&支持
