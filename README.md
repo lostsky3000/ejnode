@@ -47,5 +47,5 @@ ejnode是一个业务逻辑单线程，非业务功能(io,timer等)多线程的�
 
 ## 社区&支持
 
-EMAIL: 296821855@qq.com
+E-Mail: 296821855@qq.com
 

@@ -9,12 +9,18 @@ import fun.lib.ejnode.core.NodeContext;
 import fun.lib.ejnode.core.db.redis.*;
 import fun.lib.ejnode.core.pool.Pool;
 
+
+/**
+ * redis客户端 示例
+ * @author lostsky
+ */
+
 public class RedisClientTest {
 
     public static void main(String[] args){
         EJNode.get()
-                .entry(Entry.class)
-                .start();
+                .entry(Entry.class)  // 设置启动入口类
+                .start();  // 开始事件循环
     }
 
     static class Entry extends NodeEntry{
@@ -27,15 +33,16 @@ public class RedisClientTest {
             String host = "127.0.0.1";
             int port = 6379;
             String password = "123456";
-            Pool<RedisClient> pool = db.redis().createPool()
-                    .connConfig(host, port, password)
-                    .connTimeout(10000)
-                    .keepAliveInterval(30000)
-                    .poolSize(1)
+            Pool<RedisClient> pool = db.redis().createPool()  //创建连接池
+                    .connConfig(host, port, password)  // 设置 host,port,password
+                    .connTimeout(10000)   //设置连接超时(ms)
+                    .keepAliveInterval(30000)  //设置保活频率(ms)，连接会按此频率定时ping redis服务端
+                    .poolSize(1)   //连接池活跃连接数量
                     .start();
-            timer.timeout(3000, ()->{
-                RedisClient client = pool.borrow();
-                if(client == null){
+
+            timer.timeout(3000, ()->{  // 因所有io为非阻塞异步，等3秒，使pool有可用连接
+                RedisClient client = pool.borrow();  //获得一个连接
+                if(client == null){  //所有io为非阻塞异步，所以可能当前没有可用连接
                     log.error("redis not ready: "+pool.lastError());
                     return;
                 }
@@ -88,6 +95,7 @@ public class RedisClientTest {
                     log.info("loadScript, ret="+result+", error="+error);
                 });
             }finally {
+                // 使用完毕后归还给连接池
                 client.release();
             }
         }
@@ -96,13 +104,15 @@ public class RedisClientTest {
             NodeContext ctx = NodeContext.currentContext();
             Logger log = ctx.logger;
 
-            client.subscribe("channel1").onSubsResult((error, channel, subsNum) -> {
+            client.subscribe("channel1").onSubsResult((error, channel, subsNum) -> {  //订阅结果回调
                 log.info("subscribe at "+channel+" succ, channelNum="+subsNum);
+            }).onMessage((channel, msg) -> {   //收到消息回调
+                log.info("recv message from "+channel+": "+msg);
 
-                client.unsubscribe("channel1").onUnsubsResult((error1, channel1, subsNum1) -> {
-
-                });
-                client.release();
+//                if(msg.equals("quit")){
+//                    client.unsubscribe("channel1");  //取消订阅
+//                    client.release();   //使用完毕后归还给连接池
+//                }
             });
         }
     }
